@@ -12,15 +12,15 @@ import retrofit2.http.Query;
  */
 public interface ICNDBApi
 {
-	@GET("jokes/random")
+	@GET("/jokes/random")
 	Call<Joke> getRandomJoke();
 
-	@GET("jokes/random")
+	@GET("/jokes/random")
 	Call<Joke[]> getRandomJoke(@Query("limitTo") String[] categoriesToInclude);
 
-	@GET("jokes/random/{count}")
+	@GET("/jokes/random/{count}")
 	Call<Joke[]> getRandomJokes(@Path("count") int count);
 
-	@GET("jokes/{id}")
+	@GET("/jokes/{id}")
 	Call<Joke> getJokeById(@Path("id") int id);
 }

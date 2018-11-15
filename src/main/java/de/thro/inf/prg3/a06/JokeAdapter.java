@@ -1,5 +1,6 @@
 package de.thro.inf.prg3.a06;
 
+import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -8,9 +9,16 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 
-public class JokeAdapter<T extends Joke> extends TypeAdapter<T>
+public class JokeAdapter extends TypeAdapter<Joke>
 {
-	public void write(JsonWriter out, T jk) throws IOException {
+	private final Gson gson;
+
+	public JokeAdapter() {
+		gson = new Gson();
+	}
+
+	public void write(JsonWriter out, Joke jk) throws IOException
+	{
 		// Note: There is no need to implement the write method,
 		// since we're only consuming the API, but not sending to it.
 		out.beginObject();
@@ -21,25 +29,29 @@ public class JokeAdapter<T extends Joke> extends TypeAdapter<T>
 	}
 
 	@Override
-	public T read(JsonReader in) throws IOException {
-		final Joke jk = new Joke();
+	public Joke read(JsonReader in) throws IOException
+	{
+		Joke jk = new Joke();
 
 		in.beginObject();
-		while (in.hasNext()) {
-			switch (in.nextName()) {
-				case "id":
-					jk.setNumber(in.nextInt());
+		while (in.hasNext())
+		{
+			switch (in.nextName())
+			{
+				case "type":
+					if (!in.nextString().equals("success"))
+					{
+						throw new IOException();
+					}
 					break;
-				case "joke":
-					jk.setContent(in.nextString());
-					break;
-				case "categories":
-					jk.setRubrics(in.nextString().split(";"));
+				/* serialize the inner value simply by calling Gson because we mapped the fields to JSON keys */
+				case "value":
+					jk = gson.fromJson(in, Joke.class);
 					break;
 			}
 		}
 		in.endObject();
 
-		return (T) jk;
+		return jk;
 	}
 }

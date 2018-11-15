@@ -1,17 +1,33 @@
 package de.thro.inf.prg3.a06.model;
 
+import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Peter Kurfer
  * Created on 11/9/17.
  */
 public final class Joke {
+
+	@SerializedName("id")
 	private int number;
+
+	@SerializedName("joke")
 	private String content;
-	private String[] rubrics;
+
+	@SerializedName("categories")
+	private List<String> rubrics;
+
+	public Joke() {
+		number = -1;
+		content = "Not correctly deserialized";
+		rubrics = new LinkedList<>();
+	}
 
 	public int getNumber() {
 		return number;
@@ -29,11 +45,11 @@ public final class Joke {
 		this.content = content;
 	}
 
-	public String[] getRubrics() {
+	public List<String> getRubrics() {
 		return rubrics;
 	}
 
-	public void setRubrics(String[] rubrics) {
+	public void setRubrics(List<String> rubrics) {
 		this.rubrics = rubrics;
 	}
 

@@ -16,11 +16,14 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static de.thro.inf.prg3.a06.ICNDBApi.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Peter Kurfer
@@ -36,14 +39,14 @@ class ICNDBTests {
 	@BeforeEach
 	void setup() {
 		Gson gson = new GsonBuilder()
-			.registerTypeAdapter(Joke.class, new JokeAdapter())
-			.registerTypeAdapter(Joke[].class, new JokeArrayAdapter())
-			.create();
+				.registerTypeAdapter(Joke.class, new JokeAdapter())
+				.registerTypeAdapter(Joke[].class, new JokeArrayAdapter())
+				.create();
 
 		Retrofit retrofit = new Retrofit.Builder()
-			.addConverterFactory(GsonConverterFactory.create(gson))
-			.baseUrl("http://api.icndb.com")
-			.build();
+				.addConverterFactory(GsonConverterFactory.create(gson))
+				.baseUrl("http://api.icndb.com")
+				.build();
 
 		icndbApi = retrofit.create(ICNDBApi.class);
 	}
@@ -71,5 +74,88 @@ class ICNDBTests {
 		}
 
 		assertTrue(collision, String.format("Completed %d requests without collision; consider increasing REQUEST_COUNT", requests));
+	}
+
+	@Test
+	void testGetRandomJokeWithChangedName() throws IOException {
+		Joke j = icndbApi.getRandomJoke("Bruce", "Wayne").execute().body();
+		assertNotNull(j);
+		assertFalse(j.getContent().contains("Chuck"));
+		assertFalse(j.getContent().contains("Norris"));
+		logger.info(j.toString());
+	}
+
+	@Test
+	void testGetMultipleRandomJokes() throws IOException {
+		Joke[] jokes = icndbApi.getRandomJokes(5).execute().body();
+		assertNotNull(jokes);
+		assertEquals(5, jokes.length);
+
+		for(Joke j : jokes) {
+			logger.info(j.toString());
+		}
+	}
+
+	@Test
+	void testGetMultipleRandomJokesWithChangedName() throws IOException {
+		Joke[] jokes = icndbApi.getRandomJokes(5, "Bruce", "Wayne").execute().body();
+		assertNotNull(jokes);
+		assertEquals(5, jokes.length);
+
+		for(Joke j : jokes) {
+			assertFalse(j.getContent().contains("Chuck"));
+			assertFalse(j.getContent().contains("Norris"));
+			logger.info(j.toString());
+		}
+	}
+
+	@Test
+	void testGetMultipleRandomJokesWithCategoriesFilter() throws IOException {
+		Joke[] jokes = icndbApi.getRandomJokes(5, new String[]{"nerdy"}).execute().body();
+
+		assertNotNull(jokes);
+		assertEquals(5, jokes.length);
+
+		for(Joke j : jokes) {
+			boolean containedNerdy = false;
+			for(String rubric : j.getRubrics()) {
+				/* shorthand for containedNerdy = containedNerdy | rubric.equals("nerdy");  */
+				containedNerdy |= rubric.equals("nerdy");
+			}
+			assertTrue(containedNerdy);
+			logger.info(j.toString());
+		}
+	}
+
+	@Test
+	void testGetMultipleRandomJokesWithCategoriesFilterAndChangedName() throws IOException {
+		Joke[] jokes = icndbApi.getRandomJokes(5, new String[]{"nerdy"}, "Bruce", "Wayne").execute().body();
+
+		assertNotNull(jokes);
+		assertEquals(5, jokes.length);
+
+		for(Joke j : jokes) {
+			assertFalse(j.getContent().contains("Chuck"));
+			assertFalse(j.getContent().contains("Norris"));
+			assertTrue(j.getRubrics().stream().anyMatch(r -> r.equals("nerdy")));
+			logger.info(j.toString());
+		}
+	}
+
+	@Test
+	void testGetJokeById() throws IOException {
+
+		List<Integer> randomIds = new ArrayList<>(10);
+
+		for(int i = 0; i < 10; i++) {
+			randomIds.add(icndbApi.getRandomJoke().execute().body().getNumber());
+		}
+
+		for(Integer id : randomIds) {
+			Joke j = icndbApi.getJoke(id).execute().body();
+			assertNotNull(j);
+			assertTrue(randomIds.contains(j.getNumber()));
+			logger.info(j.toString());
+		}
 	}
 }

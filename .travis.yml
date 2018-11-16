@@ -1,5 +1,2 @@
 language: java
 dist: trusty
-branches:
-  except:
-  - master
